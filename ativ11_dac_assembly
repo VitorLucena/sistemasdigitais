@@ -1,0 +1,119 @@
+.include "m328pdef.inc"
+.org 0x0000 rjmp setup
+.org 0x001E rjmp timer          ; localizacao match 0(parcela de frame)
+.org 0x0018 rjmp timer_frame    ;localizacao flag frame
+
+setup:
+
+  ldi r20, 0b11111111 ; 8 bits de saida
+	out DDRD, r20 ; 
+  ldi r20, 0b00000000 ; 2 bits sinal de entrada
+	out DDRC, r20 ;
+  
+  ldi r24, 0 ;controle
+  ldi r25, 255 ;controle
+
+;configuração dos timers
+cli
+
+ldi r20, 0b00000110
+out TCCR0B, r20 ; Pre-escala de 255
+ldi r20, 4
+out OCR2B, r20 ; valor a ser comparado. 
+ldi r20, 0b00000100
+sts TIMSK0, r20 ; Habilita interrupcao de comparacao
+
+ldi r20, 0b00000100
+out TCCR1B, r20 ; Pre-escala de 255
+ldi r20, 0b00111101
+out OCR1BL, r20 ; valor a ser comparado 16bits
+ldi r20, 0b00000100
+out OCR1BH, r20 ; valor a ser comparado 16bits
+ldi r20, 0b00000100
+sts TIMSK1, r20 ; Habilita interrupcao de comparacao
+
+
+ldi r20, 0
+out TCNT0, r20 ; Zera o contador
+out TCNT1L, r20 ; Zera o contador
+out TCNT1H, r20 ; Zera o contador
+
+clr r21
+
+sei
+
+loop:
+
+cpi r21,r27
+brne sele
+rjmp loop
+
+sele:
+
+mov r27,r21
+
+cpi r23,0
+breq quadrada
+
+cpi r23,1
+breq serra
+
+cpi r23,2
+breq triangular
+
+rjmp loop
+
+quadrada:
+sbrc r21,7
+out PORTD, r25 ;escreve na porta de saida
+sbrs r21,7
+out PORTD, r24 ;escreve na porta de saida
+rjmp loop
+
+serra:
+out PORTD, r21 ;escreve na porta de saida
+rjmp loop
+
+triangular:
+mov r26,r21
+cpi r21,127
+brsh tratamento
+volta:
+lsl r26
+out PORTD, r26 ;escreve na porta de saida
+rjmp loop
+
+tratamento: ;parte da triangular
+ldi r20,127
+sub r26,r20
+sub r20,r26
+mov r26,r20
+rjmp volta
+
+timer_frame:   ;funcao interrupcao
+
+clr r21
+clr r27
+
+in r22, PINC  ; r22 registrador que lida com o valor de entrada
+sbrc r22,0
+sbi r23,0.   ;r23 guarda o valor selecionado
+sbrc r22,1
+sbi r23,1
+
+ldi r20, 0
+out TCNT0, r20 ; Zera o contador
+out TCNT1L, r20 ; Zera o contador
+out TCNT1H, r20 ; Zera o contador
+
+reti
+
+timer:   ;funcao interrupcao
+
+ldi r20, 0
+out TCNT0, r20 ; Zera o contador
+
+inc r21 ;r21 registrador que guarda o valor da saida
+
+reti
+
