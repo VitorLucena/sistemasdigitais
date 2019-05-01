@@ -1,136 +1,108 @@
-.include "m328pdef.inc"
-.org 0x0000 rjmp setup
-.org 0x001E rjmp timer          ; localizacao match 0(parcela de frame)
-.org 0x0018 rjmp timer_frame    ;localizacao flag frame
+void setup() {
+ 
+  asm(
+".include "m328pdef.inc" \n"
+".org 0x0000 rjmp setup \n"
+".org 0x0020 rjmp timer ; localizacao overflow "
+);
+}
 
-setup:
-.org 0x0033
+void loop(){
 
-  ldi r20, 0b11111111 ; 8 bits de saida
-	out DDRD, r20 ; 
-  ldi r20, 0b00000000 ; 2 bits sinal de entrada
-	out DDRC, r20 
-	ldi r20, 0b00100000 ; 8 bits de saida
-	out DDRB, r20 ; 
+asm(
+
+"setup: \n"
+" .org 0x0033 \n"
+
+      "  ldi r20, 0b11111111 ; 8 bits de saida \n"
+	" out 0x2A, r20  ; DDRD - 0x2A \n"
+       " ldi r20, 0b00000000 ; 2 bits sinal de entrada \n"
+	"out 0x27, r20 ; DDRC - 0x27 \n"
+	"ldi r20, 0b00100000 ; 8 bits de saida \n"
+	"out 0x24, r20 ; ; DDRB - 0x24 \n"
   
-  ldi r24, 0    ;controle
-  ldi r25, 255  ;controle
-  clr r27
+"  clr r24    ;controle \n"
+"  ldi r25, 255  ;controle \n"
+"  clr r27 \n"
 
-;configuração dos timers
-cli
+" cli ;configuração do timer \n"
 
-ldi r20, 0b00000110
-sts TCCR0B, r20 ; Pre-escala de 255
-ldi r20, 4
-sts OCR2B, r20 ; valor a ser comparado. 
-ldi r20, 0b00000100
-sts TIMSK0, r20 ; Habilita interrupcao de comparacao
+" ldi r20, 0b00000010 \n"
+"sts 0x45, r20 ; Pre-escala de 255 ; TCCR0B - 0x45 \n"
+"ldi r20, 0b00000001 \n"
+" sts 0x6E, r20 ; Habilita interrupcao de comparacao ; TIMSK0 - 0x6E \n"
 
-ldi r20, 0b00000100
-sts TCCR1B, r20 ; Pre-escala de 255
-ldi r20, 0b00111101
-lsl r20
-lsl r20
-sts OCR1BL, r20 ; valor a ser comparado 16bits
-lsl r20
-lsl r20
-ldi r20, 0b00000100 ; 
-sts OCR1BH, r20 ; valor a ser comparado 16bits
-ldi r20, 0b00000100
-sts TIMSK1, r20 ; Habilita interrupcao de comparacao
+" sei \n"
 
+" loop: \n"
 
-ldi r20, 0
-sts TCNT0, r20 ; Zera o contador
-sts TCNT1L, r20 ; Zera o contador
-sts TCNT1H, r20 ; Zera o contador
+" cp r21,r27 \n"
+ " brne sele \n"
 
-clr r21
+" rjmp loop \n"
 
-sei
+" sele: \n"
 
-loop:
+" mov r27,r21 \n"
 
-cp r21,r27
-brne sele
-rjmp loop
+" cpi r21,0 \n"
+" breq timer_255 \n"
 
-sele:
+" cpi r23,0 \n"
+" breq quadrada \n"
 
-mov r27,r21
+" cpi r23,1 \n"
+" breq serra \n"
 
-cpi r23,0
-breq quadrada
+" cpi r23,2 \n"
+" breq triangular \n"
 
-cpi r23,1
-breq serra
+" rjmp loop \n"
 
-cpi r23,2
-breq triangular
+" quadrada: \n"
+" sbrc r21,7 \n"
+" out 0x2B, r25 ;escreve na porta de saida. ; PORTD - 0x2B \n"
+" sbrs r21,7 \n"
+" out 0x2B, r24 ;escreve na porta de saida ; PORTD - 0x2B \n"
 
-rjmp loop
+"sbrc r21,7 \n"
+"sbi 0x25, 5  ; PORTB - 0x25 \n"
+"sbrs r21,7 \n"
+"cbi 0x25, 5 ; PORTB - 0x25 \n"
+"rjmp loop \n"
 
-quadrada:
-sbrc r21,7
-out PORTD, r25 ;escreve na porta de saida
-sbrs r21,7
-out PORTD, r24 ;escreve na porta de saida
+"serra: \n"
+"out 0x2B, r21 ;escreve na porta de saida ; PORTD - 0x2B \n"
+"rjmp loop \n"
 
-ldi r20, 0
-out PORTB,r20
-rjmp loop
+"triangular: \n"
+"mov r26,r21 \n"
+"cpi r21,127 \n"
+"brsh tratamento \n"
+"volta: \n"
+"lsl r26 \n"
+"out 0x2B, r26 ;escreve na porta de saida ; PORTD - 0x2B \n"
+"rjmp loop \n"
 
-serra:
-out PORTD, r21 ;escreve na porta de saida
+"tratamento: ;parte da triangular \n"
+"ldi r20,127 \n"
+"sub r26,r20 \n"
+"sub r20,r26 \n"
+"mov r26,r20 \n"
+"rjmp volta \n"
 
-ldi r20, 0b00100000
-out PORTB,r20
-rjmp loop
+"timer_255:   ;funcao interrupcao \n"
+"clr r27 \n"
+"in r22, 0x26  ; r22 registrador que lida com o valor de entrada ; PINC - 0x26 \n"
+"sbrc r22,0 \n"
+"sbr r23,1 ;r23 guarda o valor  \n"
+"sbrc r22,1 \n"
+"sbr r23,2 ;r23 guarda o valor  \n"
+"rjmp loop \n"
 
-triangular:
-mov r26,r21
-cpi r21,127
-brsh tratamento
-volta:
-lsl r26
-out PORTD, r26 ;escreve na porta de saida
+"timer:   ;funcao interrupcao \n"
+"inc r21 ;r21 registrador que guarda o valor da saida \n"
+"reti \n"
 
-ldi r20, 0
-out PORTB,r20
-rjmp loop
-
-tratamento: ;parte da triangular
-ldi r20,127
-sub r26,r20
-sub r20,r26
-mov r26,r20
-rjmp volta
-
-timer_frame:   ;funcao interrupcao
-
-clr r21
-clr r27
-
-in r22, PINC  ; r22 registrador que lida com o valor de entrada
-sbrc r22,0
-sbr r23,1 ;r23 guarda o valor 
-sbrc r22,1
-sbr r23,2 ;r23 guarda o valor 
-
-
-ldi r20, 0
-sts TCNT0, r20 ; Zera o contador
-sts TCNT1L, r20 ; Zera o contador
-sts TCNT1H, r20 ; Zera o contador
-
-reti
-
-timer:   ;funcao interrupcao
-
-ldi r20, 0
-sts TCNT0, r20 ; Zera o contador
-
-inc r21 ;r21 registrador que guarda o valor da saida
-
-reti
+);
+}
