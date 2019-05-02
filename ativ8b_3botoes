@@ -1,0 +1,128 @@
+.include "m328pdef.inc"
+.org 0x0000 rjmp setup_
+.org 0x001A rjmp timer
+;				---configurações inicias---
+;Atividade 2
+
+  setup_:
+  ldi r23, 0b11100000 ; 4 leds de saida
+	out DDRD, r23 ; 
+  ldi r23, 0b00000000 ; 3 botoes de entrada
+	out DDRB, r23 ; 
+  
+  ;timer
+  ldi r23, 0b00000110
+  sts TCCR1B, r23
+  ldi r23, 1
+  sts TIMSK1,r23
+
+ clr r25 ; Clear the saved timer
+ clr r20;
+
+inicio:
+
+clr r32
+ldi r23, 0b11100000 ; cor branco
+out PORTD, r23
+clr r18  ; confere senha 
+clr r16 ; conta sequencia
+clr r17 ; flag de errado
+
+loop:
+
+sbrc r32,0
+rjmp inicio
+
+in r23, PINB ; checa cor vermelha(r7,g6,b5)
+sbrc r23, 5
+call vermelho
+
+in r23, PINB ; checa cor verde(r7,g6,b5)
+sbrc r23, 4
+call verde
+
+in r23, PINB ; checa cor azul(r7,g6,b5)
+sbrc r23, 3
+call azul
+
+seq1:
+cpi r16,1
+brne seq2
+cpi r18,1
+brne errado
+
+seq2:
+cpi r16,2
+brne seq3
+cpi r18,11
+brne errado
+
+seq3:
+cpi r16,3
+brne seq4
+cpi r18,12
+brne errado
+
+seq4:
+cpi r16,4
+brne loop
+cpi r18,72
+brne errado
+breq funciona
+
+errado:
+ldi r17,5
+rjmp loop
+
+funciona:
+clr r23
+out PORTD,r23 
+call delay
+sts TCNT1H,r23
+sts TCNT1L,r23
+rjmp inicio
+
+vermelho:
+ldi r23, 0b10000000 ;insere na porta
+out PORTD,r23 
+ldi r23,1
+add r18,r23
+inc r16
+call delay
+ret
+
+verde:
+ldi r23, 0b01000000 ;insere na porta
+out PORTD,r23 
+ldi r23,10
+add r18,r23
+inc r16
+call delay
+ret
+
+azul:
+ldi r23, 0b00100000 ;insere na porta
+out PORTD,r23 
+ldi r23,60
+add r18,r23
+inc r16
+call delay
+ret
+
+timer:
+r32, 1
+reti
+
+delay:
+clr r27 ; defina r17 para 0
+clr r28 ; defina r18 para 0
+ldi r29, 42  ; defina r19 para 10
+
+delay_loop:
+dec r28 ; decremente r18
+brne delay_loop ; salte para delay_loop se r18 n~ao ´e 0
+dec r27 ; decremente r17
+brne delay_loop ; salte para delay_loop se r17 n~ao ´e 0
+dec r29 ; decrament r19
+brne delay_loop ; salte para delay_loop se r19 n~ao ´e 0
+ret ; retorne
