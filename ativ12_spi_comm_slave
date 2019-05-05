@@ -1,0 +1,37 @@
+.org 0x0000 rjmp setup
+.org 0x0022 rjmp recebido ; spi flag transferencia completa
+
+setup:
+;setup spi comm
+    ldi r16, 0b11101101
+    sts SPCR,r16 ; spi control register
+    sbi SPSR,0 ; spi status register(double speed)
+    ;SPDR = spi data register
+   
+;setup IO
+  ldi r16, 0b00101111
+  out DDRB,r16
+  ldi r16, 0b11111100
+  out DDRC,r16
+	
+wait:
+rjmp wait
+
+recebido:
+    
+     lds r16, SPDR ; Ler dado recebido
+     saida:
+     mov r17,r16
+     lsl r17
+     lsl r17
+     out PORTD,r17
+     sbrs r16,6
+     cbi PORTB,0
+     sbrs r16,7
+     cbi PORTB,1
+     sbrc r16,6
+     sbi PORTB,0
+     sbrc r16,7
+     sbi PORTB,1
+     
+     reti
