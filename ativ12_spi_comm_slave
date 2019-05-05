@@ -5,9 +5,7 @@ setup:
 ;setup spi comm
     ldi r16, 0b11101101
     sts SPCR,r16 ; spi control register
-	ldi r16,1
-    sts SPSR,r16 ; spi status register(double speed)
-    ;SPDR = spi data register
+	
    
 ;setup IO
   ldi r16, 0b00010011
@@ -21,7 +19,7 @@ rjmp wait
 recebido:
     
      lds r16, SPDR ; Ler dado recebido
-     saida:
+saida:
      mov r17,r16
      lsl r17
      lsl r17
