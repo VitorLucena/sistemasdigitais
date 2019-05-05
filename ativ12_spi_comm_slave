@@ -13,12 +13,12 @@ setup:
   ldi r16, 0b11111100
   out DDRD,r16
 	
-wait:
+wait
 rjmp wait
 
 recebido:
     
-     lds r16, SPDR ; Ler dado recebido
+     in r16, SPDR ; Ler dado recebido
 saida:
      mov r17,r16
      lsl r17
@@ -33,4 +33,4 @@ saida:
      sbrc r16,7
      sbi PORTB,1
      
-     reti
+    reti
