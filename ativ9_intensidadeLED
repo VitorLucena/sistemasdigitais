@@ -1,0 +1,48 @@
+;Projeto Assembly 9 (potenciometro controla a luminosidade do led)
+
+
+;PC0 potenciometro e PB1 LED
+;
+; projeto9.asm
+;
+; Created: 18/04/2019 21:31:53
+; Author : Louyse
+;
+
+.org 0x0000 setup_adc:
+
+setup_adc:
+     ldi r16,0b01100000 ; set in A0
+	 sts ADMUX,r16
+	 ldi r16,0b11100010 ; factor = 4
+	 sts ADCSRA,r16
+	 ldi r16,0b00000000
+	 out DDRC,r16
+    
+setup_clock:
+	ldi r16,0b10100001 
+	sts TCCR1A,r16       
+	ldi r16,0b00001001   
+	sts TCCR1B,r16       
+	ldi r16,0xEF         
+	sts OCR1AL,r16        
+	ldi r16,0xff         
+	sts 0x89,r16         
+setup_out:
+ 
+	sbi DDRB, PB1
+	cbi DDRC, PC0
+	
+main:
+     clr r18
+	 ldi r20,255
+	 ldi r16,0b11100010 
+	 sts ADCSRA,r16
+     lds r16,ADCSRA
+	 sbrs r16,4
+	 jmp main
+	 jmp pwm      
+pwm:
+	 lds r17,ADCH	 
+	 sts OCR1AL,r17
+	 jmp main
