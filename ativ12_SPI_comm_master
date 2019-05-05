@@ -47,21 +47,3 @@ adc:
      sts SPDR, r16 ; envia novo dado
      reti
      
-   ;fim
-    
-    
-    
-    
-    
-  ;   clr r18
-;	 ldi r20,255
-;	 ldi r16,0b11100010 
-;	 sts ADCSRA,r16
- ;    lds r16,ADCSRA
-;	 sbrs r16,4
-;	 jmp main
-;	 jmp pwm      
-;pwm:
-;	 lds r17,ADCH	 
-;	 sts OCR1AL,r17
-;	 jmp main
