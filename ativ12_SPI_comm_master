@@ -1,3 +1,5 @@
+;master
+.include "m328pdef.inc" 
 .org 0x0000 rjmp inicio
 .org 0x002A rjmp conversao ; conversao do adc completa
 
