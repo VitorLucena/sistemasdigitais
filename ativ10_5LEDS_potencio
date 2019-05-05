@@ -1,0 +1,92 @@
+;Projeto Assembly 10
+
+
+; PC0 potenciometro e PD2-6 LED  
+; projeto10.asm
+;
+; Created: 18/04/2019 21:31:53
+; Author : Louyse
+;
+
+.include "M328PDEF.INC"
+
+setup_adc:
+     ldi r16,0b01000000 ; set in A0
+	 sts ADMUX,r16
+	 ldi r16,0b11100010 ; factor = 4
+	 sts ADCSRA,r16
+	 ldi r16,0b01111100
+	 out DDRD,r16
+	 ldi r16,0b00000000
+	 out DDRC,r16
+main:
+	 ldi r16,0b11100010 
+	 sts ADCSRA,r16
+     	 lds r16,ADCSRA
+	 sbrs r16,4
+	 jmp main
+	 jmp pwm   
+pwm:
+	 
+	 lds r18, ADCL
+	 lds r19, ADCH
+	 cpi r19,0b00000011
+	 brge segundoreg
+	 cpi r19,0b00000010 
+	 brge estado3
+	 cpi r19,0b00000001
+	 brge estado2
+	 cpi r18,204
+	 brlo inicio
+	 cpi r18,204
+	 brge estado1
+	 
+	 rjmp inicio
+	 jmp main
+segundoreg:
+	cpi r18, 0b11111100
+	brge estado4
+	cpi r18, 0b11111100
+	brlo estado5 
+inicio:
+	cbi PortD, 2
+	cbi PortD, 3
+	cbi PortD, 4
+	cbi PortD, 5
+	cbi PortD, 6
+	jmp main
+estado1:
+	sbi PortD, 2
+	cbi PortD, 3
+	cbi PortD, 4
+	cbi PortD, 5
+	cbi PortD, 6
+	jmp main
+estado2:
+	sbi PortD, 2
+	sbi PortD, 3
+	cbi PortD, 4
+	cbi PortD, 5
+	cbi PortD, 6
+	jmp main
+estado3:
+	sbi PortD, 2
+	sbi PortD, 3
+	sbi PortD, 4
+	cbi PortD, 5
+	cbi PortD, 6
+	jmp main
+estado4:
+	sbi PortD, 2
+	sbi PortD, 3
+	sbi PortD, 4
+	sbi PortD, 5
+	cbi PortD, 6
+	jmp main
+estado5:
+	sbi PortD, 2
+	sbi PortD, 3
+	sbi PortD, 4
+	sbi PortD, 5
+	sbi PortD, 6
+	jmp main
