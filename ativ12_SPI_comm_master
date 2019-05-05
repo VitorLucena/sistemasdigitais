@@ -1,46 +1,46 @@
-;atividade 11
+.org 0x0000 rjmp inicio
+.org 0x002A rjmp conversao ; conversao do adc completa
 
-.org 0x0000 setup
-.org 0x002A adc ; conversao do adc completa
-
-setup:
+inicio:
+.org 0x0033
 ;setup adc
-        cli 
-        ldi r16,0b01100000 ; set in A0
-	 sts ADMUX,r16
-	 ldi r16,0b11101011 ; factor = 8
-	 sts ADCSRA,r16
-	 ldi r16, 3
-	 sts ADCSRB,r16 ; timer do adc
+    cli 
+    ldi r16,0b01100000 ; set in A0
+	sts ADMUX,r16
+	ldi r16,0b11101011 ; factor = 8
+	sts ADCSRA,r16
+	ldi r16, 3
+	sts ADCSRB,r16 ; timer do adc
  
 ;setup spi comm
     ldi r16, 0b11111101
-    sts SPCR,r16 ; spi control register
-    sbi SPSR,0 ; spi status register(double speed)
+    out SPCR,r16 ; spi control register
+	ldi r16,1
+    out SPSR,r16 ; spi status register(double speed)
     ;SPDR = spi data register
-    
-    
+   
   ;setup timer adc
 	ldi r16, 2
-        out TCCR0B, r16 ; Pre-escala de 8 ; 
+    out TCCR0B, r16 ; Pre-escala de 8 ; 
 	ldi r16, 2
-        sts TIMSK0, r16 ; Habilita interrupcao de comparacao timer A0 ;
+    sts TIMSK0, r16 ; Habilita interrupcao de comparacao timer A0 ;
 	ldi r16,40
-	sts OCR0A,r16 ;compara em 40
+	out OCR0A,r16 ;compara em 40
 	clr r16
-	sts TCNT0,r16
+	out TCNT0,r16
 	
 ;setup IO
- 
-	sbi DDRB, PB1
-	cbi DDRC, PC0
+    ;setup IO
+    ldi r16, 0b00101111
+    out DDRB,r16
+    cbi DDRC,0
 	
 	sei
 	
 wait:
 rjmp wait
 
-adc:
+conversao:
      clr r16
      sts TCNT0,r16 ; zera o contador do tempo
      lds r16, ADCH ; guarda a nova conversao
