@@ -9,7 +9,7 @@ setup:
     ;SPDR = spi data register
    
 ;setup IO
-  ldi r16, 0b00101111
+  ldi r16, 0b00010011
   out DDRB,r16
   ldi r16, 0b11111100
   out DDRD,r16
