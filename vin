@@ -1,8 +1,24 @@
 
+;slave
+.include "m328pdef.inc" 
+.org 0x0000 rjmp setup
 
 setup:
-ldi r31,
-ldi r30,
+ldi r31, 1
+ldi r30, 76
+
+ldi r16,5
+sts 0xA015,r16
+ldi r16,0
+sts 0xA014,r16
+ldi r16,14
+sts 0xA013,r16
+ldi r16,8
+sts 0xA012,r16
+ldi r16,5
+sts 0xA011,r16
+ldi r16,10
+sts 0xA010,r16
 
 troco:
 clr r16
@@ -109,9 +125,14 @@ lds r17,0xA010
 sub r17,r16
 sts 0xA010,r17
 
+lds r25,0xA025
+lds r24,0xA024
+lds r23,0xA023
+lds r22,0xA022
+lds r21,0xA021
+lds r20,0xA020
 
-
-
+clr r16
 
 
 
