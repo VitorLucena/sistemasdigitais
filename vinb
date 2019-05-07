@@ -1,0 +1,216 @@
+;slave
+.include "m328pdef.inc" 
+.org 0x0000 rjmp setup
+
+setup:
+ldi r31, 1
+ldi r30, 76
+
+ldi r16,5
+sts 0xA015,r16
+ldi r16,0
+sts 0xA014,r16
+ldi r16,14
+sts 0xA013,r16
+ldi r16,8
+sts 0xA012,r16
+ldi r16,5
+sts 0xA011,r16
+ldi r16,10
+sts 0xA010,r16
+
+troco:
+clr r16
+lds r17,0xA015
+
+centena:
+cpi r31,0
+breq dezena_st
+cpi r17,0
+breq dezena_st
+subi r31,1
+subi r17,1
+inc r16
+rjmp centena
+
+dezena_st:
+;sts 0xA025,r16
+mov r29,r16
+mov r24,r16
+lds r17,0xA015
+sub r17,r16
+sts 0xA015,r17
+clr r16
+lds r17,0xA014
+dezena:
+cpi r30,50
+brlt vcinco_st
+cpi r17,0
+breq vcinco_st
+subi r30,50
+subi r17,1
+inc r16
+rjmp dezena
+
+vcinco_st:
+;sts 0xA024,r16
+mov r28,r16
+lds r17,0xA014
+sub r17,r16
+sts 0xA014,r17
+clr r16
+lds r17, 0xA013
+vcinco:
+cpi r30,25
+brlt mdez_st
+cpi r17,0
+breq mdez_st
+subi r30,25
+subi r17,1
+inc r16
+rjmp vcinco
+
+mdez_st:
+;sts 0xA023,r16
+mov r27,r16
+lds r17,0xA013
+sub r17,r16
+sts 0xA013,r17
+clr r16
+lds r17, 0xA012
+mdez:
+cpi r30,10
+brlt mcinco_st
+cpi r17,0
+breq mcinco_st
+subi r30,10
+subi r17,1
+inc r16
+rjmp mdez
+
+mcinco_st:
+;sts 0xA022,r16
+mov r26,r16
+lds r17,0xA012
+sub r17,r16
+sts 0xA012,r17
+clr r16
+lds r17, 0xA011
+mcinco:
+cpi r30,5
+brlt mum_st
+cpi r17,0
+breq mum_st
+subi r30,5
+subi r17,1
+inc r16
+rjmp mcinco
+
+mum_st:
+;sts 0xA021,r16
+mov r25,r16
+lds r17,0xA011
+sub r17,r16
+sts 0xA011,r17
+clr r16
+lds r17, 0xA010
+mum:
+cpi r30,0
+breq zero_st
+cpi r17,0
+breq zero_st
+subi r30,1
+subi r17,1
+inc r16
+rjmp mum
+
+zero_st:
+;sts 0xA020,r16
+mov r24,r16
+lds r17,0xA010
+sub r17,r16
+sts 0xA010,r17
+
+
+wait:
+rjmp wait
+
+botao:
+in r23,PINB
+sbrs r23,5
+call bup
+
+in r23,PINB
+sbrs r23,4
+call bdown
+ret
+
+bup:
+cpi r23,5
+breq zera_23
+inc r23
+ret
+zera_23:
+ldi r23,0
+ret
+
+bdown:
+cpi r23,0
+breq cinco_23
+subi r23,1
+ret
+cinco_23:
+ldi r23,5
+ret
+
+sete_seg:
+	cpi r16,0
+	breq zero
+	cpi r16,1
+	breq um
+	cpi r16,2
+	breq dois
+	cpi r16,3
+	breq tres
+	cpi r16,4
+	breq quatro
+	cpi r16,5
+	breq cinco
+	cpi r16,6
+	breq seis
+	cpi r16,7
+	breq sete
+	cpi r16,8
+	breq oito
+	cpi r16,0
+	breq nove
+zero:
+	ldi r17, 0b11111100
+	reti
+um:
+	ldi r17, 0b00100100
+	reti
+dois:
+	ldi r17, 0b10111010
+	reti
+tres:
+	ldi r17, 0b10101110
+	reti
+quatro:
+	ldi r17, 0b01100110
+	reti
+cinco:
+	ldi r17, 0b11001110
+	reti
+seis:
+	ldi r17, 0b11011110
+	reti
+sete:
+	ldi r17, 0b10100100
+	reti
+oito:
+	ldi r17, 0b11111110
+	reti
+nove:
+	ldi r17, 0b11100110
+	reti
