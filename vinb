@@ -1,4 +1,7 @@
-;slave
+;troco de moeda
+;liga led, varia valor a ser trocado a partir de potenciometro
+;pisca led, varia valores nos cofres a partir de potenciometro, apos o botao ser pressionado por 1s
+;3 botoes, 1-up,2-down,3-varia posicao
 .include "m328pdef.inc" 
 .org 0x0000 rjmp setup
 
@@ -133,6 +136,42 @@ sts 0xA010,r17
 
 
 wait:
+ldi r18,2
+comp:
+    cpi r18, 0x02			;compara o contador com 2 
+    breq loadA				;caso seja a comparação verdadeira salta para loadA
+    cpi r18, 0x01			;compara o contador com 1 
+    breq loadB				;caso seja a comparação verdadeira salta para loadB
+    cpi r18, 0x00			;compara o contador com 0 
+    breq loadC				;caso seja a comparação verdadeira salta para loadC
+loadA:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadB
+    cbi PortB, 0			;muda para 1 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r20			;imprime no display A o valor que está em r20
+	call delay0
+    call sete_seg				;depois de retornar da escrita pula para a comparação novamente
+   rjmp comp
+loadB:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadC
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    cbi PortB, 1			;muda para 1 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r21			;imprime no display B o valor que está em r21
+	call delay0
+       call sete_seg				;depois de retornar da escrita pula para a comparação novamente
+rjmp comp
+loadC:
+    ldi r18, 0x02			;carrega o contador novamente para o ciclo recomeçar em loadA
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    cbi PortB, 2			;muda para 1 o bit 4 de PORTB (transistor 3)
+    out PortD, r22			;imprime no display C o valor que está em r22
+	call delay0
+    call sete_seg				;depois de retornar da escrita pula para a comparação novamente
+  rjmp comp
+
 rjmp wait
 
 botao:
@@ -186,31 +225,44 @@ sete_seg:
 	breq nove
 zero:
 	ldi r17, 0b11111100
-	reti
+	ret
 um:
 	ldi r17, 0b00100100
-	reti
+	rret
 dois:
 	ldi r17, 0b10111010
-	reti
+	ret
 tres:
 	ldi r17, 0b10101110
-	reti
+	ret
 quatro:
 	ldi r17, 0b01100110
-	reti
+	ret
 cinco:
 	ldi r17, 0b11001110
-	reti
+	ret
 seis:
 	ldi r17, 0b11011110
-	reti
+	ret
 sete:
 	ldi r17, 0b10100100
-	reti
+	ret
 oito:
 	ldi r17, 0b11111110
-	reti
+	ret
 nove:
 	ldi r17, 0b11100110
-	reti
+	ret
+	
+delay0:
+     dec r16
+	 cp r16,r17
+	 brne delay0
+	 ldi r16,255
+	 rjmp delay1
+delay1:
+     dec r16
+	 cp r16,r17
+	 brne delay1
+	 ret
+	 
