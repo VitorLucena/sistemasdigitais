@@ -1,0 +1,151 @@
+;
+; Projeto1.asm
+;
+; Created: 11/04/2019 16:32:33
+; Author : Louyse 
+;
+.include "m328pdef.inc"
+.org 0x0000
+rjmp start
+;-------------------------configurações inicias-----------------------------------
+start:
+
+    ldi r16, 0b11111110		;carrega o valor em binário no reg auxiliar r16
+    out DDRD, r16			;configura PORTD, os 7 bits(11111100) são habilidados como saída 
+	ldi r17, 0b00011100		;carrega o valor em binário no reg auxiliar r17	
+    out DDRB, r17			;configura PORTB, os bits(00011100) são habilidados como saída 
+    ldi r18, 0x02			;carrega 2 no reg auxiliar r18 (contador)
+	ldi r19,19;;;;;;;;;;;;;;;;;;;;;;;;Valor a ser convertido
+	rjmp BCD
+BCD:
+	ldi r23, 0
+	ldi r24, 0
+	ldi r25, 0
+centena:
+	cpi r19,100
+	brlo dezena
+	inc r23
+	subi r19,100
+	rjmp centena 
+dezena:
+	cpi r19,10
+	brlo unidade
+	inc r24
+	subi r19,10
+	rjmp dezena 
+unidade:
+	cpi r19,0
+	breq mover
+	inc r25
+	subi r19,1
+	rjmp unidade
+mover:
+	mov r16,r23
+	call comp2
+	mov r20,r17
+	mov r16,r24
+	call comp2
+	mov r21,r17
+	mov r16,r25
+	call comp2
+	mov r22,r17
+	rjmp comp
+comp2:
+	cpi r16,0
+	breq zero
+	cpi r16,1
+	breq um
+	cpi r16,2
+	breq dois
+	cpi r16,3
+	breq tres
+	cpi r16,4
+	breq quatro
+	cpi r16,5
+	breq cinco
+	cpi r16,6
+	breq seis
+	cpi r16,7
+	breq sete
+	cpi r16,8
+	breq oito
+	cpi r16,9
+	breq nove
+zero:
+	ldi r17, 0b00000010
+	ret
+um:
+	ldi r17, 0b10011110
+	ret
+dois:
+	ldi r17, 0b00100100
+	ret
+tres:
+	ldi r17, 0b00001100
+	ret
+quatro:
+	ldi r17, 0b10011000
+	ret
+cinco:
+	ldi r17, 0b01001000
+	ret
+seis:
+	ldi r17, 0b01001000
+	ret
+sete:
+	ldi r17, 0b00011110
+	ret
+oito:
+	ldi r17, 0b00000000
+	ret
+nove:
+	ldi r17, 0b00011000
+	ret
+
+;------------------------------------ loop -------------------------------------------
+comp:
+    cpi r18, 0x02			;compara o contador com 2 
+    breq loadA				;caso seja a comparação verdadeira salta para loadA
+    cpi r18, 0x01			;compara o contador com 1 
+    breq loadB				;caso seja a comparação verdadeira salta para loadB
+    cpi r18, 0x00			;compara o contador com 0 
+    breq loadC				;caso seja a comparação verdadeira salta para loadC
+loadA:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadB
+    sbi PortB, 2			;muda para 1 o bit 2 de PORTB (transistor 1)
+    cbi PortB, 3			;muda para 0 o bit 3 de PORTB (transistor 2)
+    cbi PortB, 4			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r20			;imprime no display A o valor que está em r20
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadB:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadC
+    cbi PortB, 2			;muda para 0 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 3			;muda para 1 o bit 3 de PORTB (transistor 2)
+    cbi PortB, 4			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r21			;imprime no display B o valor que está em r21
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadC:
+    ldi r18, 0x02			;carrega o contador novamente para o ciclo recomeçar em loadA
+    cbi PortB, 2			;muda para 0 o bit 2 de PORTB (transistor 1)
+    cbi PortB, 3			;muda para 0 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 4			;muda para 1 o bit 4 de PORTB (transistor 3)
+    out PortD, r22			;imprime no display C o valor que está em r22
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+
+delay0:
+     dec r16
+	 cp r16,r17
+	 brne delay0
+	 ldi r16,255
+	 jmp delay1
+delay1:
+     dec r16
+	 cp r16,r17
+	 brne delay1
+	 ret
