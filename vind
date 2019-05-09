@@ -1,4 +1,3 @@
-;precisa setup
 
 clr r31
 
@@ -47,8 +46,11 @@ rjmp next_troco
 
 lower_troco:
 
-;r29 = mais significativo
-;r30 = menos significativo
+mov r23,31 ;seletor de moeda
+mov r24,29 ;r29 = mais significativo
+mov r25,30 ;r30 = menos significativo
+
+;precisa colocar uma saida
 
 botao:
 in r28,PINB
