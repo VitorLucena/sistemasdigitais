@@ -1,0 +1,126 @@
+; display de 7 segmentos
+; sequencia abcdefg - PD7654321
+; 3 displays, 321 - 10,9,8
+
+.include "m328pdef.inc"
+.org 0x0000 rjmp start
+;-------------------------configurações inicias-----------------------------------
+start:
+
+    ldi r16, 0b11111110		;carrega o valor em binário no reg auxiliar r16
+    out DDRD, r16			;configura PORTD, os 7 bits(11111100) são habilidados como saída 
+	ldi r17, 0b00000111		;carrega o valor em binário no reg auxiliar r17	
+    out DDRB, r17			;configura PORTB, os bits(00011100) são habilidados como saída 
+    ldi r18, 0x02			;carrega 2 no reg auxiliar r18 (contador)
+	ldi r23,0
+	ldi r24,1
+	ldi r25,2
+	mov r16,r23
+	call comp2
+	mov r20,r17
+	mov r16,r24
+	call comp2
+	mov r21,r17
+	mov r16,r25
+	call comp2
+	mov r22,r17
+	rjmp comp
+comp2:
+	cpi r16,0
+	breq zero
+	cpi r16,1
+	breq um
+	cpi r16,2
+	breq dois
+	cpi r16,3
+	breq tres
+	cpi r16,4
+	breq quatro
+	cpi r16,5
+	breq cinco
+	cpi r16,6
+	breq seis
+	cpi r16,7
+	breq sete
+	cpi r16,8
+	breq oito
+	cpi r16,9
+	breq nove
+zero:
+	ldi r17, 0b11111100
+	reti
+um:
+	ldi r17, 0b01100000
+	reti
+dois:
+	ldi r17, 0b11011010
+	reti
+tres:
+	ldi r17, 0b11110010
+	reti
+quatro:
+	ldi r17, 0b01100110
+	reti
+cinco:
+	ldi r17, 0b10110110
+	reti
+seis:
+	ldi r17, 0b10111110
+	reti
+sete:
+	ldi r17, 0b11100000
+	reti
+oito:
+	ldi r17, 0b11111110
+	reti
+nove:
+	ldi r17, 0b11100110
+	reti
+
+;------------------------------------ loop -------------------------------------------
+comp:
+    cpi r18, 0x02			;compara o contador com 2 
+    breq loadA				;caso seja a comparação verdadeira salta para loadA
+    cpi r18, 0x01			;compara o contador com 1 
+    breq loadB				;caso seja a comparação verdadeira salta para loadB
+    cpi r18, 0x00			;compara o contador com 0 
+    breq loadC				;caso seja a comparação verdadeira salta para loadC
+loadA:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadB
+    cbi PortB, 0			;muda para 1 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r20			;imprime no display A o valor que está em r20
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadB:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadC
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    cbi PortB, 1			;muda para 1 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r21			;imprime no display B o valor que está em r21
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadC:
+    ldi r18, 0x02			;carrega o contador novamente para o ciclo recomeçar em loadA
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    cbi PortB, 2			;muda para 1 o bit 4 de PORTB (transistor 3)
+    out PortD, r22			;imprime no display C o valor que está em r22
+	ldi r16, 255
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+
+delay0:
+     dec r16
+	 cp r16,r17
+	 brne delay0
+	 ldi r16,255
+	 jmp delay1
+delay1:
+     dec r16
+	 cp r16,r17
+	 brne delay1
+	 reti
