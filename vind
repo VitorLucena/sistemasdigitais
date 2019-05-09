@@ -1,3 +1,5 @@
+;precisa setup
+
 clr r31
 
 seletor_troco:
@@ -47,4 +49,32 @@ lower_troco:
 
 ;r29 = mais significativo
 ;r30 = menos significativo
+
+botao:
+in r28,PINB
+sbrs r28,5
+call bup
+
+in r28,PINB
+sbrs r28,4
+call bdown
+ret
+
+bup:
+cpi r31,5
+breq zera_31
+inc r31
+ret
+zera_31:
+clr 31
+ret
+
+bdown:
+cpi r31,0
+breq cinco_31
+subi r31,1
+ret
+cinco_31:
+ldi r31,5
+ret
 
