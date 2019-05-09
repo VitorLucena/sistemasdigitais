@@ -1,0 +1,50 @@
+clr r31
+
+seletor_troco:
+clr r29
+
+cpi r31,0
+breq m_cem
+cpi r31,1
+breq m_cinquenta
+cpi r31,2
+breq m_vcinco
+cpi r31,3
+breq m_dez
+cpi r31,4
+breq m_cinco
+cpi r31,5
+breq m_um
+
+m_cem:
+lds r30,0606
+rjmp next_troco
+m_cinquenta:
+lds r30,0607
+rjmp next_troco
+m_vcinco:
+lds r30,0608
+rjmp next_troco
+m_dez:
+lds r30,0609
+rjmp next_troco
+m_cinco:
+lds r30,060A
+rjmp next_troco
+m_um:
+lds r30,060B
+rjmp next_troco
+
+next_troco:
+
+cpi r30,10
+brlo lower_troco
+subi r30,10
+inc r29
+rjmp next_troco
+
+lower_troco:
+
+;r29 = mais significativo
+;r30 = menos significativo
+
