@@ -1,0 +1,180 @@
+;inicio valor no cofre 0x0600
+;inicio valor do troco 0x0606
+
+.include "m328pdef.inc" 
+.org 0x0000 rjmp setup
+
+setup:
+ldi r31, 4
+ldi r30, 89
+
+
+ldi r16,2
+sts 0x0600,r16
+ldi r16,0
+sts 0x0601,r16
+ldi r16,14
+sts 0x0602,r16
+ldi r16,8
+sts 0x0603,r16
+ldi r16,5
+sts 0x0604,r16
+ldi r16,10
+sts 0x0605,r16
+
+troco:
+clr r16
+lds r17,0x0600
+
+centena:
+cpi r31,0
+breq dezena_st
+cpi r17,0
+breq dezena_st
+subi r31,1
+subi r17,1
+inc r16
+rjmp centena
+
+centena_b:
+ldi r18,10
+mul r31,r18
+mov r31,r0
+rjmp dezena_stb
+
+dezena_st:
+cpi r31,0
+brne centena_b
+dezena_stb:
+sts 0x0606,r16
+lds r17,0x0600
+sub r17,r16
+sts 0x0600,r17
+clr r16
+lds r17,0x0601
+
+dezena:
+cpi r31,5
+brlt dezena_b
+cpi r17,0
+breq vcinco_st
+subi r31,5
+subi r17,1
+inc r16
+rjmp dezena
+
+dezena_b:
+cpi r30,50
+brlt vcinco_st
+cpi r17,0
+breq vcinco_st
+subi r30,50
+subi r17,1
+inc r16
+rjmp dezena_b
+
+vcinco_st:
+sts 0x0607,r16
+lds r17,0x0601
+sub r17,r16
+sts 0x0601,r17
+clr r16
+lds r17, 0x0602
+vcinco:
+cpi r31,5
+brlt vcinco_b
+cpi r17,2
+brlo mdez_st
+subi r31,5
+subi r17,2
+ldi r18,2
+add r16,r18
+rjmp vcinco
+vcinco_b:
+cpi r30,25
+brlt mdez_st
+cpi r17,0
+breq mdez_st
+subi r30,25
+subi r17,1
+inc r16
+rjmp vcinco_b
+
+mdez_st:
+sts 0x0608,r16
+lds r17,0x0602
+sub r17,r16
+sts 0x0602,r17
+clr r16
+lds r17, 0x0603
+mdez:
+cpi r31,1
+brlo mdez_b
+cpi r17,0
+breq mcinco_st
+subi r31,1
+subi r17,1
+inc r16
+rjmp mdez
+mdez_b:
+cpi r30,10
+brlt mcinco_st
+cpi r17,0
+breq mcinco_st
+subi r30,10
+subi r17,1
+inc r16
+rjmp mdez_b
+
+mcinco_st:
+sts 0x0609,r16
+lds r17,0x0603
+sub r17,r16
+sts 0x0603,r17
+clr r16
+lds r17, 0x0604
+mcinco:
+cpi r30,5
+brlt mum_st
+cpi r17,0
+breq mum_st
+subi r30,5
+subi r17,1
+inc r16
+rjmp mcinco
+
+mum_st:
+sts 0x060A,r16
+lds r17,0x0604
+sub r17,r16
+sts 0x0604,r17
+clr r16
+lds r17, 0x0605
+mum:
+cpi r30,0
+breq zero_st
+cpi r17,0
+breq zero_st
+subi r30,1
+subi r17,1
+inc r16
+rjmp mum
+
+zero_st:
+sts 0x060B,r16
+lds r17,0x0605
+sub r17,r16
+sts 0x0605,r17
+
+
+clr r16
+
+lds r24, 0x0606
+lds r25, 0x0607
+lds r26, 0x0608
+lds r27, 0x0609
+lds r28, 0x060A
+lds r29, 0x060B
+
+wait:
+rjmp wait
