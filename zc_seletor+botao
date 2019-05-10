@@ -22,22 +22,22 @@ cpi r31,5
 breq m_um
 
 m_cem:
-lds r30,0606
+lds r30,0x0606
 rjmp next_troco
 m_cinquenta:
-lds r30,0607
+lds r30,0x0607
 rjmp next_troco
 m_vcinco:
-lds r30,0608
+lds r30,0x0608
 rjmp next_troco
 m_dez:
-lds r30,0609
+lds r30,0x0609
 rjmp next_troco
 m_cinco:
-lds r30,060A
+lds r30,0x060A
 rjmp next_troco
 m_um:
-lds r30,060B
+lds r30,0x060B
 rjmp next_troco
 
 next_troco:
