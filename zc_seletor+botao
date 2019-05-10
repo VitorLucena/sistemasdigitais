@@ -3,6 +3,7 @@
 ;30 = display menos significtivo
 ;29 = display mais significativo
 ;28 = reg auxiliar valor botao
+;seletor_troco: botao:
  
 seletor_troco:
 clr r29
