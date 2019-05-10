@@ -7,6 +7,8 @@
 setup:
 ldi r31, 4
 ldi r30, 89
+sts 0x060C,r31
+sts 0x060D,r30
 
 
 ldi r16,2
