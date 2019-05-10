@@ -1,9 +1,9 @@
-;regs utilizados 31=seletor cofre
+;regs utilizados 
+;31 = seletor cofre
 ;30 = display menos significtivo
 ;29 = display mais significativo
 ;28 = reg auxiliar valor botao
-clr r31
-
+ 
 seletor_troco:
 clr r29
 
@@ -53,7 +53,7 @@ mov r23,31 ;seletor de moeda
 mov r24,29 ;r29 = mais significativo
 mov r25,30 ;r30 = menos significativo
 
-;precisa colocar uma saida
+ret ; a funcao encerra aqui
 
 botao:
 in r28,PINB
