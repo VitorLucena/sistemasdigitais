@@ -1,0 +1,606 @@
+;inicio valor no cofre 0x0600
+;inicio valor do troco 0x0606
+
+.include "m328pdef.inc" 
+.org 0x0000 rjmp setup
+
+setup:
+
+ldi r16, 0b11111111		
+out DDRD, r16			
+ldi r17, 0b00000111		
+out DDRB, r17	
+cbi DDRC,0
+
+    ldi r16,0b01000000 ; set in A0
+	sts ADMUX,r16
+	ldi r16,0b11100010 ; factor = 4
+	sts ADCSRA,r16
+
+ldi r31, 2       ;valor inicial do troco
+ldi r30, 40
+sts 0x0615,r31
+sts 0x0618,r30
+
+
+ldi r16,100       ;valores iniciais no cofre
+sts 0x0600,r16
+ldi r16,100
+sts 0x0601,r16
+ldi r16,100
+sts 0x0602,r16
+ldi r16,100
+sts 0x0603,r16
+ldi r16,100
+sts 0x0604,r16
+ldi r16,100
+sts 0x0605,r16
+	
+call troco_mizera
+
+wait:
+call direto_display
+call seletor_troco
+call botao
+rjmp wait	
+
+troco_mizera:
+lds r31, 0x0615
+lds r30, 0x0618
+
+ldi r16,2
+sts 0x060C,r31
+sts 0x060D,r30
+sts 0x060E,r16
+
+troco:
+clr r16
+lds r17,0x0600
+
+centena:
+cpi r31,0
+breq dezena_st
+cpi r17,0
+breq dezena_st
+subi r31,1
+subi r17,1
+inc r16
+rjmp centena
+
+centena_b:
+ldi r18,10
+mul r31,r18
+mov r31,r0
+rjmp dezena_stb
+
+dezena_st:
+cpi r31,0
+brne centena_b
+dezena_stb:
+sts 0x0606,r16
+lds r17,0x0600
+sub r17,r16
+sts 0x0600,r17
+clr r16
+lds r17,0x0601
+
+dezena:
+cpi r31,5
+brlt dezena_b
+cpi r17,0
+breq vcinco_st
+subi r31,5
+subi r17,1
+inc r16
+rjmp dezena
+
+dezena_b:
+cpi r30,50
+brlt vcinco_st
+cpi r17,0
+breq vcinco_st
+subi r30,50
+subi r17,1
+inc r16
+rjmp dezena_b
+
+vcinco_st:
+sts 0x0607,r16
+lds r17,0x0601
+sub r17,r16
+sts 0x0601,r17
+clr r16
+lds r17, 0x0602
+vcinco:
+cpi r31,5
+brlt vcinco_b
+cpi r17,2
+brlo mdez_st
+subi r31,5
+subi r17,2
+ldi r18,2
+add r16,r18
+rjmp vcinco
+vcinco_b:
+cpi r30,25
+brlt mdez_st
+cpi r17,0
+breq mdez_st
+subi r30,25
+subi r17,1
+inc r16
+rjmp vcinco_b
+
+mdez_st:
+sts 0x0608,r16
+lds r17,0x0602
+sub r17,r16
+sts 0x0602,r17
+clr r16
+lds r17, 0x0603
+mdez:
+cpi r31,1
+brlo mdez_b
+cpi r17,0
+breq mcinco_st
+subi r31,1
+subi r17,1
+inc r16
+rjmp mdez
+mdez_b:
+cpi r30,10
+brlt mcinco_st
+cpi r17,0
+breq mcinco_st
+subi r30,10
+subi r17,1
+inc r16
+rjmp mdez_b
+
+mcinco_st:
+sts 0x0609,r16
+lds r17,0x0603
+sub r17,r16
+sts 0x0603,r17
+clr r16
+lds r17, 0x0604
+mcinco:
+cpi r30,5
+brlt mum_st
+cpi r17,0
+breq mum_st
+subi r30,5
+subi r17,1
+inc r16
+rjmp mcinco
+
+mum_st:
+sts 0x060A,r16
+lds r17,0x0604
+sub r17,r16
+sts 0x0604,r17
+clr r16
+lds r17, 0x0605
+mum:
+cpi r30,0
+breq zero_st
+cpi r17,0
+breq zero_st
+subi r30,1
+subi r17,1
+inc r16
+rjmp mum
+
+zero_st:
+sts 0x060B,r16
+lds r17,0x0605
+sub r17,r16
+sts 0x0605,r17
+
+clr r16
+
+lds r24, 0x0606
+lds r25, 0x0607
+lds r26, 0x0608
+lds r27, 0x0609
+lds r28, 0x060A
+lds r29, 0x060B
+
+ret
+
+;//------------------------------------ loop -------------------------------------------
+;/*regs utilizados 
+;31 = seletor cofre
+;30 = display menos significtivo
+;29 = display mais significativo
+;28 = reg auxiliar valor botao
+;seletor_troco: botao: */
+ 
+seletor_troco:
+clr r29
+
+cpi r31,0
+breq m_cem
+cpi r31,1
+breq m_cinquenta
+cpi r31,2
+breq m_vcinco
+cpi r31,3
+breq m_dez
+cpi r31,4
+breq m_cinco
+cpi r31,5
+breq m_um
+
+m_cem:
+lds r30,0x0606
+rjmp next_troco
+m_cinquenta:
+lds r30,0x0607
+rjmp next_troco
+m_vcinco:
+lds r30,0x0608
+rjmp next_troco
+m_dez:
+lds r30,0x0609
+rjmp next_troco
+m_cinco:
+lds r30,0x060A
+rjmp next_troco
+m_um:
+lds r30,0x060B
+rjmp next_troco
+
+next_troco:
+
+cpi r30,10
+brlo lower_troco
+subi r30,10
+inc r29
+rjmp next_troco
+
+lower_troco:
+
+mov r23,r31 ;seletor de moeda
+mov r24,r29 ;r29 = mais significativo
+mov r25,r30 ;r30 = menos significativo
+
+ret ; a funcao encerra aqui
+
+botao:
+in r28,PINB
+sbrc r28,5
+call bup
+
+sbrc r28,4
+call bdown
+
+sbrc r28,3
+call b_vp
+ret
+
+bup:
+call delay
+cpi r31,5
+breq zera_31
+inc r31
+ret
+zera_31:
+clr r31
+ret
+
+bdown:
+call delay
+cpi r31,0
+breq cinco_31
+subi r31,1
+ret
+cinco_31:
+ldi r31,5
+ret
+
+b_vp:
+call delay
+in r28,PINB
+sbrc r28,3
+call funcao_3
+b_vp_b:
+rjmp bin_bcd_a
+b_vp_d:
+lds r23, 0x0615
+lds r24, 0x0616
+lds r25, 0x0617
+call direto_display
+rjmp b_vp_check
+
+b_vp_check:
+in r28,PINB
+sbrc r28,3
+rjmp b_vp_c
+rjmp b_vp_b
+
+b_vp_c:
+call delay
+call troco_mizera
+
+ret
+
+funcao_3:
+sbi portd,1
+call delay
+call delay
+cbi portd,1
+call delay
+call delay
+rjmp funcao_3
+
+ ;valores para cofre 0x061C,0x061D,0x061E
+
+direto_display:
+lds r18, 0x060E			;carrega 2 no reg auxiliar r18 (contador)
+
+	mov r16,r23
+	call comp2
+	mov r20,r17
+	mov r16,r24
+	call comp2
+	mov r21,r17
+	mov r16,r25
+	call comp2
+	mov r22,r17
+	rjmp comp
+comp2:
+	cpi r16,0
+	breq zero
+	cpi r16,1
+	breq um
+	cpi r16,2
+	breq dois
+	cpi r16,3
+	breq tres
+	cpi r16,4
+	breq quatro
+	cpi r16,5
+	breq cinco
+	cpi r16,6
+	breq seis
+	cpi r16,7
+	breq sete
+	cpi r16,8
+	breq oito
+	cpi r16,9
+	breq nove
+zero:
+	ldi r17, 0b11111100
+	reti
+um:
+	ldi r17, 0b01100000
+	reti
+dois:
+	ldi r17, 0b11011010
+	reti
+tres:
+	ldi r17, 0b11110010
+	reti
+quatro:
+	ldi r17, 0b01100110
+	reti
+cinco:
+	ldi r17, 0b10110110
+	reti
+seis:
+	ldi r17, 0b10111110
+	reti
+sete:
+	ldi r17, 0b11100000
+	reti
+oito:
+	ldi r17, 0b11111110
+	reti
+nove:
+	ldi r17, 0b11100110
+	reti
+
+
+comp:
+    cpi r18, 0x02			;compara o contador com 2 
+    breq loadA				;caso seja a comparação verdadeira salta para loadA
+    cpi r18, 0x01			;compara o contador com 1 
+    breq loadB				;caso seja a comparação verdadeira salta para loadB
+    cpi r18, 0x00			;compara o contador com 0 
+    breq loadC				;caso seja a comparação verdadeira salta para loadC
+loadA:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadB
+    sts 0x060E,r18
+    cbi PortB, 0			;muda para 1 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r20			;imprime no display A o valor que está em r20
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadB:
+    dec r18					;decrementa o contador para que na proxima execusão seja loadC
+    sts 0x060E,r18
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    cbi PortB, 1			;muda para 1 o bit 3 de PORTB (transistor 2)
+    sbi PortB, 2			;muda para 0 o bit 4 de PORTB (transistor 3)
+    out PortD, r21			;imprime no display B o valor que está em r21
+	call delay0
+    rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+loadC:
+    ldi r18, 0x02			;carrega o contador novamente para o ciclo recomeçar em loadA
+    sts 0x060E,r18
+    sbi PortB, 0			;muda para 0 o bit 2 de PORTB (transistor 1)
+    sbi PortB, 1			;muda para 0 o bit 3 de PORTB (transistor 2)
+    cbi PortB, 2			;muda para 1 o bit 4 de PORTB (transistor 3)
+    out PortD, r22			;imprime no display C o valor que está em r22
+	call delay0
+
+	ret
+    ;rjmp comp				;depois de retornar da escrita pula para a comparação novamente
+
+delay0:
+ldi r16,255
+ldi r17,10
+delay0_b:
+     dec r16
+	 cp r16,r17
+	 brne delay0_b
+	 ldi r16,255
+	 jmp delay1
+delay1:
+     dec r16
+	 cp r16,r17
+	 brne delay1
+	 ret
+
+delay:
+
+clr r17;defina r17 para 0
+clr r18;defina r18 para 0
+ldi r19,19;r19 para 10
+
+delay_loop:
+
+dec r18; decremente r18
+brne delay_loop ; salte para delay_loop se r18 n~ao ´e 0
+dec r17;decremente r17
+brne delay_loop ; salte para delay_loop se r17 n~ao ´e 0
+dec r19;decrament r19
+brne delay_loop ; salte para delay_loop se r19 n~ao ´e 0
+ret ; retorne
+
+bin_bcd_cofre:
+sts 0x0610,r16
+sts 0x0611,r17
+sts 0x0612,r18
+sts 0x0613,r19
+sts 0x0614,r20
+sts 0x061E,r21
+
+ldi r21,1
+
+rjmp bin_bcd_cofre_b
+
+bin_bcd_a: 
+sts 0x0610,r16
+sts 0x0611,r17
+sts 0x0612,r18
+sts 0x0613,r19
+sts 0x0614,r20
+sts 0x0619,r21
+clr r21
+
+bin_bcd_cofre_b:
+
+ ldi r16,0b11100010
+ sts ADCSRA,r16
+ call delay0
+ lds r17, ADCL
+ lds r16, ADCH
+ 
+
+clr r18
+clr r19
+
+cpi r16,0b00000011
+breq set_999
+
+bin_bcd_b:
+
+sbrc r16,1
+ldi r18,5
+sbrc r16,1
+ldi r19,12
+sbrc r16,1
+cbr r16,10
+
+sbrc r16,0
+ldi r20,2
+sbrc r16,0
+add r18,r20
+sbrc r16,0
+ldi r20,56
+sbrc r16,0
+add r19,r20
+sbrc r16,0
+cbr r16,1
+
+;agora começa a bixiga
+bin_bcd_c:
+
+cpi r17,100
+brlo bin_bcd_d
+subi r17,100
+inc r18
+rjmp bin_bcd_c
+
+bin_bcd_d:
+add r17,r19
+cpi r17,100
+brlo binbetween
+subi r17,100
+inc r18
+binbetween:
+clr r19
+clr r20
+
+bin_bcd_e:
+cpi r17,10
+brlo bin_bcd_f
+subi r17,10
+inc r19
+rjmp bin_bcd_e
+
+bin_bcd_f:
+
+cpi r21,1
+breq bin_bcd_cofre_c
+
+sts 0x0615, r18
+sts 0x0616, r19
+sts 0x0617, r17
+ldi r20,10
+mul r19,r20
+mov r19,r0
+add r19,r17
+sts 0x0618, r19
+
+lds r16, 0x0610
+lds r17, 0x0611
+lds r18, 0x0612
+lds r19, 0x0613
+lds r20, 0x0614
+lds r21, 0x061E
+
+rjmp b_vp_d
+
+bin_bcd_cofre_c:
+sts 0x061C, r18    ;valores para cofre 0x061C,0x061D,0x061E
+sts 0x061D, r19
+ldi r20,10
+mul r18,r20
+mov r18,r0
+add r18,r19
+sts 0x061E, r19
+
+lds r16, 0x0610
+lds r17, 0x0611
+lds r18, 0x0612
+lds r19, 0x0613
+lds r20, 0x0614
+lds r21, 0x0619
+
+rjmp funcao_3
+
+set_999:
+cpi r17,231
+brsh setb_999
+rjmp bin_bcd_b
+
+setb_999:
+ldi r17,9
+ldi r18,9
+ldi r19,9
+rjmp bin_bcd_f
+
