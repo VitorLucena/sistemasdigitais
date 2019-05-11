@@ -12,7 +12,7 @@ ldi r17, 0b00000111
 out DDRB, r17	
 cbi DDRC,0
 
-    ldi r16,0b01100000 ; set in A0
+    ldi r16,0b01000000 ; set in A0
 	sts ADMUX,r16
 	ldi r16,0b11100010 ; factor = 4
 	sts ADCSRA,r16
@@ -205,9 +205,6 @@ lds r29, 0x060B
 ret
 
 ;//------------------------------------ loop -------------------------------------------
-
-
-
 ;/*regs utilizados 
 ;31 = seletor cofre
 ;30 = display menos significtivo
@@ -299,20 +296,13 @@ ldi r31,5
 ret
 
 b_vp:
-call funcao_2
+call adc_calc
+lds r23, 0x0615
+lds r24, 0x0616
+lds r25, 0x0617
+call direto_display
+rjmp b_vp
 ret
-
-funcao_2:
-    ldi r16,0b11100010
-    sts ADCSRA,r16
-	lds r16, ADCH
-
-	;calculo do bin-bcd
-
-	clr r17,r18,r19
-
-
-
 
 direto_display:
 lds r18, 0x060E			;carrega 2 no reg auxiliar r18 (contador)
@@ -447,3 +437,94 @@ brne delay_loop ; salte para delay_loop se r17 n~ao ´e 0
 dec r19;decrament r19
 brne delay_loop ; salte para delay_loop se r19 n~ao ´e 0
 ret ; retorne
+
+adc_calc: 
+sts 0x0610,r16
+sts 0x0611,r17
+sts 0x0612,r18
+sts 0x0613,r19
+sts 0x0614,r20
+
+ ldi r16,0b11100010
+ sts ADCSRA,r16
+ lds r16, ADCH
+ lds r17, ADCL
+
+clr r18
+clr r19
+
+ldi r16,11  ;msb
+ldi r17,254 ;lsb
+
+cpi r16,11
+breq set_999
+
+bin_bcd_b:
+
+sbrc r16,1
+ldi r18,5
+sbrc r16,1
+ldi r19,12
+sbrc r16,1
+cbr r16,10
+
+sbrc r16,0
+ldi r20,2
+sbrc r16,0
+add r18,r20
+sbrc r16,0
+ldi r20,56
+sbrc r16,0
+add r19,r20
+sbrc r16,0
+cbr r16,1
+
+;agora começa a bixiga
+bin_bcd_c:
+
+cpi r17,100
+brlo bin_bcd_d
+subi r17,100
+inc r18
+rjmp bin_bcd_c
+
+bin_bcd_d:
+add r17,r19
+cpi r17,100
+brlo binbetween
+subi r17,100
+inc r18
+binbetween:
+clr r19
+clr r20
+
+bin_bcd_e:
+cpi r17,10
+brlo bin_bcd_f
+subi r17,10
+inc r19
+rjmp bin_bcd_e
+
+bin_bcd_f:
+
+sts 0x0615, r18
+sts 0x0616, r19
+sts 0x0617, r17
+
+lds r16, 0x0610
+lds r17, 0x0611
+lds r18, 0x0612
+lds r19, 0x0613
+lds r20, 0x0614
+
+ret
+
+set_999:
+cpi r17,231
+brsh setb_999
+rjmp bin_bcd_b
+
+setb_999:
+ldi r17,231
+rjmp bin_bcd_b
+
