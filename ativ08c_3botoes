@@ -36,15 +36,15 @@ sbrc r31,0
 rjmp inicio
 
 in r23, PINB ; checa cor vermelha(r7,g6,b5)
-sbrs r23, 5
+sbrc r23, 5
 call vermelho
 
 in r23, PINB ; checa cor verde(r7,g6,b5)
-sbrs r23, 4
+sbrc r23, 4
 call verde
 
 in r23, PINB ; checa cor azul(r7,g6,b5)
-sbrs r23, 3
+sbrc r23, 3
 call azul
 
 sbrc r16,0
