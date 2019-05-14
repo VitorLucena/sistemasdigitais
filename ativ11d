@@ -19,7 +19,7 @@ setup:
 
  cli ;configuração do timer 
 
- ldi r20, 3
+ ldi r20, 5
  out TCCR0B, r20 ; Pre-escala de 255 ; TCCR0B - 0x45 
 ldi r20, 0b00000001
  sts TIMSK0, r20 ; Habilita interrupcao de comparacao ; TIMSK0 - 0x6E 
