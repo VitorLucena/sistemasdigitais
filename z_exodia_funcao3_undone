@@ -303,7 +303,7 @@ b_vp:
 call delay
 in r28,PINB
 sbrc r28,3
-call funcao_3
+rjmp funcao_3
 b_vp_b:
 rjmp bin_bcd_a
 b_vp_d:
@@ -326,16 +326,102 @@ call troco_mizera
 ret
 
 funcao_3:
-sbi portd,1
-call delay
-call delay
-cbi portd,1
-call delay
-call delay
+sts 0x0620,r16
+sts 0x0621,r17
+sts 0x0622,r18
+
+call bin_bcd_cofre
+call seletor_troco0
+call direto_display
+rjmp botao0
 rjmp funcao_3
 
- ;valores para cofre 0x061C,0x061D,0x061E
+botao0:
+in r28,PINB
+sbrc r28,5
+call bup0
 
+sbrc r28,4
+call bdown0
+
+sbrc r28,3
+rjmp b_vp0
+
+rjmp funcao_3
+
+bup0:
+call delay
+cpi r31,5
+breq zera_310
+inc r31
+ret
+zera_310:
+clr r31
+ret
+
+bdown0:
+call delay
+cpi r31,0
+breq cinco_310
+subi r31,1
+ret
+cinco_310:
+ldi r31,5
+ret
+
+b_vp0:
+call delay
+lds r16, 0x0620
+lds r17, 0x0621
+lds r18, 0x0622
+call troco_mizera
+rjmp wait
+ ;valores para cofre 0x061C,0x061D,0x061E
+ 
+ seletor_troco0:
+cpi r31,0
+breq m_cem0
+cpi r31,1
+breq m_cinquenta0
+cpi r31,2
+breq m_vcinco0
+cpi r31,3
+breq m_dez0
+cpi r31,4
+breq m_cinco0
+cpi r31,5
+breq m_um0
+
+m_cem0:
+lds r16,0x061E
+sts 0x0600,r16
+rjmp next_troco0
+m_cinquenta0:
+lds r16,0x061E
+sts 0x0601,r16
+rjmp next_troco0
+m_vcinco0:
+lds r16,0x061E
+sts 0x0602,r16
+rjmp next_troco0
+m_dez0:
+lds r16,0x061E
+sts 0x0603,r16
+rjmp next_troco0
+m_cinco0:
+lds r16,0x061E
+sts 0x0604,r16
+rjmp next_troco0
+m_um0:
+lds r16,0x061E
+sts 0x0605,r16
+
+mov r23,r31 ;seletor de moeda
+lds r24,0x061C
+lds r25,0x061D
+
+ret ; a funcao encerra aqui
+ 
 direto_display:
 lds r18, 0x060E			;carrega 2 no reg auxiliar r18 (contador)
 
@@ -591,7 +677,7 @@ lds r19, 0x0613
 lds r20, 0x0614
 lds r21, 0x0619
 
-rjmp funcao_3
+ret
 
 set_999:
 cpi r17,231
