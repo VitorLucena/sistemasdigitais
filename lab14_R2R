@@ -1,0 +1,111 @@
+/*
+ * GccApplication1.c
+ *
+ * Created: 16/05/2019 14:51:28
+ * Author : Louyse
+ */ 
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdlib.h>
+
+#define freq 255
+#define pi 3.1415
+
+volatile char x ;
+volatile char x1;
+volatile char x2;
+
+void quadrada();
+void senoide();
+void triangular();
+void saida();
+
+int main()
+{
+//---------Setup I/O
+		DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+		DDRB = 0b00000011; //2 bits de saída para rede R2R( PB0 e PB1)
+		DDRC = 0b11111100; // Seletor das ondas (PA0 e PA1)
+		
+   
+    while (1) 
+    {
+		if(PINC == 0b00000000){
+			senoide();
+			} 
+		else if(PINC == 0b00000001) {
+			quadrada();
+			}
+		else if(PINC == 0b00000010) {
+			triangular();
+		}
+		else{ x=0; saida();}
+    }
+}
+
+void saida(){
+x1 = x;
+x2 = x;
+
+x1 = x1*4 ; //Deslocando 2 para esquerda
+x2 = x2/64; //Deslocando 6 para direita
+
+PORTD = x1;
+PORTB = x2;	
+}
+
+void quadrada(){
+	
+	for(int i=0; i<= freq; i++){
+		if(i<(freq / 2)){
+			x=255;
+		}
+		else{
+			x=0;
+		}
+		saida();
+		
+		if(PINC != 0b00000001){
+			break;
+		}
+		
+		_delay_loop_2(1000);
+	}
+}
+
+void triangular(){
+	x = 0;
+	for(int i=0; i<= (freq / 2); i++){
+			x = (i/(freq/2))*255;
+			saida();
+			if(PINC != 0b00000010){
+				break;
+			}
+			_delay_loop_2(520);
+	}
+	
+	for(int i=freq / 2; i>=0; i--){
+			x = (i/(freq/2))*255;	
+			saida();
+			if(PINC != 0b00000010){
+				break;
+			}
+			_delay_loop_2(1000);
+	}
+	
+}
+void senoide(){
+	x = 0;
+	for(int i=0; i<= freq; i++){
+		x = sin((i/freq)*2*pi)* 127 + 127;
+		saida();
+		if(PINC != 0b00000000){
+			break;
+		}
+		_delay_loop_2(1000);
+		
+	}
+}
