@@ -1,3 +1,5 @@
+; authors Louyse & Vitor
+
 .include "m328pdef.inc" 
 .org 0x0000 rjmp setup 
 .org 0x0020 rjmp timer ; localizacao overflow 
