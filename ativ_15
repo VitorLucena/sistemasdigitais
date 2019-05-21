@@ -1,0 +1,63 @@
+/*
+ * GccApplication1.c
+ * Created: 16/05/2019 14:51:28
+ * Author : Louyse
+ */ 
+
+#define F_CPU 16000000UL // 1Mhz
+#define freq 60
+#define pi 3.1415
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdlib.h>
+#include <avr/interrupt.h>
+
+void modulacao();
+void saida(int a);
+
+volatile int resultadoADC;
+
+int main()
+{
+//---------Setup 
+		DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+		DDRB = 0b00000011; //2 bits de saída para rede R2R( PB0 e PB1)
+		DDRC = 0b11111110; // entrada - sinal que vai ser modulado
+		ADMUX = 0x60;
+		ADCSRA = 0xCF; // configura periodo T
+		sei();
+		
+		while (1) {
+			modulacao();
+		}
+}
+
+void modulacao(){
+	int x;
+	for(int i=0; i<=freq; i++){
+		x = cos((i/freq)*2*pi)*resultadoADC;
+		saida(x);
+	}
+	return;	
+}
+
+void saida(int a){
+	int x1,x2;
+	x1 =  a;
+	x2 =  a;
+
+	x1 = x1*4 ; //Deslocando 2 para esquerda
+	x2 = x2/64; //Deslocando 6 para direita
+
+	PORTD = x1;
+	PORTB = x2;	
+	return;
+}
+
+ISR(ADC_vect) //interrupção ADC
+{
+	resultadoADC = ADCH;			// Output ADCH 
+	ADCSRA |= 1<<ADSC;		// Start Conversion
+	return;
+}
