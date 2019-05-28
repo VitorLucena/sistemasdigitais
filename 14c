@@ -1,0 +1,127 @@
+/*
+ * GccApplication1.c
+ *
+ * Created: 16/05/2019 14:51:28
+ * Author : Louyse e Vitor
+ */ 
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <util/delay.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define freq 10
+#define pi 4058.5f
+#define freqi 127000u
+#define freqi2 255000u
+#define f2reqi 12700u
+#define f2reqi2 25500u
+
+volatile unsigned char x ;
+volatile unsigned long int counter = 0;
+
+unsigned char  x1;
+unsigned char  x2;
+
+void quadrada();
+void senoide();
+void triangular();
+void saida();
+void incrementadora();
+
+int main()
+{
+	
+//---------Setup I/O
+		DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+		DDRB = 0b00001111; //2 bits de saída para rede R2R( PB0 e PB1)
+		DDRC = 0b11111100; // Seletor das ondas (PA0 e PA1)
+	
+        
+    while (1) 
+    {
+		
+		counter = 0;
+		
+		char sel = PINC ;
+		
+		if(sel == 0){
+			senoide();
+			} 
+		else if(sel == 1) {
+			quadrada();
+			}
+		else if(sel == 2) {
+			triangular();
+		}
+		else{ x=0; saida();}  
+   } 
+}
+
+void incrementadora(){
+	
+	counter++;
+	return;
+}
+
+void saida(){
+	
+x1 = x;
+x2 = x;
+
+x1 = x1*4 ; //Deslocando 2 para esquerda
+x2 = x2/64; //Deslocando 6 para direita
+
+PORTD = x1;
+PORTB = x2;	
+
+return ;
+
+}
+
+void quadrada(){
+	while(counter != freqi2 ){
+	incrementadora();
+	
+		if(counter < freqi){
+			x = 255;
+			}
+		else if(counter > freqi){
+			x = 0;
+		   }
+	
+	saida();
+	}
+	return;
+}
+
+void triangular(){
+	while(counter != f2reqi2 ){
+		incrementadora();
+		
+		if(counter <= f2reqi){
+			x = counter/50;
+			
+		}
+		else if(counter > f2reqi){
+			x = 255 - (((counter/100)-127)*2);
+		}
+		
+		saida();
+	}
+	return;
+}
+void senoide(){
+	while(counter != f2reqi2 ){
+		incrementadora();
+		
+	    double newc = (counter/pi);
+	
+		x = (127*sin(newc))+127;
+		
+		saida();
+	}
+	return;
+}
