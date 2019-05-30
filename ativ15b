@@ -1,0 +1,113 @@
+/*
+ * GccApplication1.c
+ *
+ * Created: 16/05/2019 14:51:28
+ * Author : Vitor
+ */ 
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <math.h>
+#include <avr/interrupt.h>
+
+#define pi 15.915f
+
+#define CMAX 100u
+
+volatile unsigned char x=1 ;
+volatile int newx=0 ;
+volatile unsigned char oldx=0;
+volatile unsigned int counter = 0;
+
+unsigned char  x1;
+unsigned char  x2;
+
+void saida();
+
+int main()
+{
+	
+//---------Setup I/O
+		DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+		DDRB = 0b00001111; //2 bits de saída para rede R2R( PB0 e PB1)
+		DDRC = 0b11111100; // Seletor das ondas (PA0 e PA1)
+	   
+	//setup adc
+	
+	ADMUX = 0b00100000;//left adjustment
+	ADCSRA = 0b11101010; //by 2 division
+	ADCSRB = 0;
+	
+	/*
+	   //timer config
+	   TCCR0B = 5 ; //1024 division
+	   TIMSK0 = 2 ;//compare A
+	   OCR0A = CMAX;
+	   */
+	   TCCR1A = 0;
+	   TCCR1B = 5;
+	   TCCR1C = 0;
+	   TIMSK1 = 2;
+	   OCR1AH = 10;
+	   OCR1AL = 255;
+	   
+	   
+	   sei();
+        
+    while (1) 
+    {
+		
+		saida();
+	
+   } 
+}
+
+
+void saida(){
+		
+		
+		if(x != oldx){
+oldx  = x;			
+x1 = x;
+x2 = x;
+
+x1 = x1*4 ; //Deslocando 2 para esquerda
+x2 = x2/64; //Deslocando 6 para direita
+
+PORTD = x1;
+PORTB = x2;	
+
+		}
+return ;
+		
+}
+
+
+ISR(ADC_vect){
+	
+	newx = ADCH ;
+
+	ADCSRA = 0b11101010; //by 2 division
+	
+	return;
+}
+
+ISR(TIMER1_COMPA_vect){
+	
+	//TCNT0 = 0;
+	TCNT1H = 0;
+	TCNT1L = 0;
+	
+	counter++;
+	
+	double newc = (counter/pi);
+	
+	newx = newx/2;
+	x = (newx*cos(newc))+127;
+	
+	if (counter == CMAX){counter = 0;}
+		
+	return;	
+}
