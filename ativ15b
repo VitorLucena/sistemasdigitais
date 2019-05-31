@@ -50,8 +50,8 @@ int main()
 	   TCCR1B = 5;
 	   TCCR1C = 0;
 	   TIMSK1 = 2;
-	   OCR1AH = 10;
-	   OCR1AL = 255;
+	   OCR1AH = 0;
+	   OCR1AL = 4;
 	   
 	   
 	   sei();
