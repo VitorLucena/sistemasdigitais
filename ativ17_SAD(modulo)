@@ -1,0 +1,96 @@
+// Author : Vitor
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <math.h>
+#include <avr/interrupt.h>
+
+ volatile unsigned char x = 0 ;
+ volatile unsigned char oldx = 0 ;
+ 
+ volatile int recebe ;
+ volatile int volta = 0 ;
+          int in_a ;
+          int in_b ;
+          int mod ;
+       double in_a ;
+
+void saida();
+
+int main()
+	
+//---------Setup I/O
+		DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+		DDRB = 0b00011011; //2 bits de saída para rede R2R( PB0 e PB1)
+		DDRC = 0b11111100; // Seletor das ondas (PA0 e PA1)
+	   
+	//setup adc
+	ADCSRB = 0;
+	   
+	   sei();
+        
+    while (1) 
+    {
+    
+    int insert = PB5;
+    if(insert == 1){
+    
+    sum = 0;
+    
+    for(int k=0;k<=199;k++){
+    
+    while(volta){
+    ADMUX = 0;
+    ADCSRA = 0b11101010;
+    }
+     in_a = recebe;
+    volta = 0;
+    
+    while(volta){
+    ADMUX = 1;
+    ADCSRA = 0b11101010;
+    }
+    in_b = recebe;
+    volta = 0;
+    
+    mod = (in_a - in_b);
+    sum = sum + fabs(mod);
+    
+    }
+    
+    sum = sum/803;
+    x = sum;
+    
+    if(sum >= 100){PB5 = 1;}
+    else {PB5 = 0;}
+    
+		saida();
+    
+   } 
+}
+
+ISR(ADC_vect){
+	
+	 recebe = ADC;
+   volta = 1;
+    
+	return;
+}
+
+void saida(){
+	
+	if(x != oldx){
+		oldx  = x;
+	unsigned char x1 = x;
+	unsigned char x2 = x;
+
+		x1 = x1*4 ; //Deslocando 2 para esquerda
+		x2 = x2/64; //Deslocando 6 para direita
+
+		PORTD = x1;
+		PORTB = x2;
+	}
+	return ;
+}
