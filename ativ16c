@@ -1,0 +1,116 @@
+
+// Author : Vitor
+// low-pass filter
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <math.h>
+#include <avr/interrupt.h>
+
+#define TAM 15
+
+volatile unsigned char x = 0 ;
+volatile unsigned char oldx = 0 ;
+
+double y_sum;
+double x_vector[TAM];
+double y_vector[TAM];
+volatile double h_vector[TAM];
+volatile double o_vector[TAM];
+
+/*
+
+FIR filter designed with
+http://t-filter.appspot.com
+
+sampling frequency: 300 Hz
+
+* 0 Hz - 5 Hz
+  gain = 1
+  desired ripple = 5 dB
+  actual ripple = 2.242052220865219 dB
+
+* 40 Hz - 60 Hz
+  gain = 0
+  desired attenuation = -40 dB
+  actual attenuation = -40.31344444747326 dB
+
+*/
+
+#define FILTER_TAP_NUM 7
+
+static double filter_taps[FILTER_TAP_NUM] = {
+  0.826412899608555,
+  -2.425019577129685,
+  4.770838951849287,
+  -5.5447861333119635,
+  4.770838951849287,
+  -2.425019577129685,
+  0.826412899608555
+};
+
+
+void saida();
+
+int main(){
+
+	//---------Setup I/O
+	DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+	DDRB = 0b00001111; //2 bits de saída para rede R2R( PB0 e PB1)
+	DDRC = 0b11111110; // Seletor das ondas (PA0 e PA1)
+
+
+	//setup adc
+
+	ADMUX = 0;
+	ADCSRA = 0b11101010; //by 2 division
+	ADCSRB = 0;
+
+	sei();
+
+	while (1)
+	{
+		saida();
+	}
+}
+
+ISR(ADC_vect){
+	
+	x_vector[0] = ADC;
+	
+	ADCSRA = 0b11101010; //by 2 division
+	
+	y_vector[0] = x_vector[0]*filter_taps[0];
+	y_sum = y_vector[0];
+	for(int i=1;i<=(FILTER_TAP_NUM-1);i++){
+		x_vector[i] = o_vector[i-1];
+		y_vector[i] = x_vector[i]*filter_taps[i];
+		y_sum = y_sum+y_vector[i];
+	}
+	for (int i=0;i<=(FILTER_TAP_NUM-2);i++){
+		o_vector[i]=x_vector[i];
+	}
+	
+	x = y_sum/12;
+	x = x_vector[0]/12;
+	
+	return;
+}
+
+void saida(){
+	
+	if(x != oldx){
+		oldx  = x;
+		unsigned char x1 = x;
+		unsigned char x2 = x;
+
+		x1 = x1*4 ; //Deslocando 2 para esquerda
+		x2 = x2/64; //Deslocando 6 para direita
+
+		PORTD = x1;
+		PORTB = x2;
+	}
+	return ;
+}
