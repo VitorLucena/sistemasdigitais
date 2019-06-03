@@ -1,0 +1,70 @@
+/*
+ * geradordeonda.c
+ *
+ * Created: 27/05/2019 14:51:28
+ * Author : Louyse Ângelo
+ */
+#define F_CPU 16000000UL
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <util/delay.h>
+#include <math.h>
+
+#define FREQ 8000
+#define pi 3.1413
+
+volatile int x, x1, x2;
+volatile double c;
+
+void saida();
+
+int main(){
+	DDRC = 0b11111100;
+	DDRB = 0b00000011;
+	DDRD = 0b11111100;
+	while (1) {
+		//Onda senoide
+		if(PINC == 0b00000000){ 
+			for(int i=0; i<FREQ; i++){
+				c=((i*2*pi)/FREQ);
+				x = (127*sin(c))+127;
+				saida();
+				_delay_loop_2(2);
+			}
+		}
+		//Onda quadrada
+		if(PINC == 0b00000001){ 
+			for(int i=0;i<FREQ;i++){
+				if(i<(FREQ/2)){
+					x = 255;
+				}else{
+					x = 0;
+				}
+				saida();
+				_delay_loop_2(16000);
+			}
+		}
+		//Onda triangular
+		if(PINC == 0b00000010){ 
+			for(int i=0;i<=FREQ;i++){
+			if (i<(FREQ/2)){
+				x = ((i*255)/(FREQ/2));	
+				}				
+			else if(i>(FREQ/2)){
+					x--;
+				}
+				
+				saida();
+				_delay_loop_2(20);
+			}
+		}
+	}
+}
+void saida(){
+	x1 = x;     x1 = x1*4;     
+	x2 = x;     x2 = x2/64;    
+	PORTD = x1;
+	PORTB = x2;
+	return;
+}
