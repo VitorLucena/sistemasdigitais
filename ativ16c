@@ -124,3 +124,44 @@ void saida(){
 	}
 	return ;
 }
+
+
+//
+/*
+
+FIR filter designed with
+http://t-filter.appspot.com
+
+sampling frequency: 330 Hz
+
+* 0 Hz - 6 Hz
+  gain = 1
+  desired ripple = 5 dB
+  actual ripple = 1.1693599276390962 dB
+
+* 30 Hz - 70 Hz
+  gain = 0
+  desired attenuation = -40 dB
+  actual attenuation = -45.4485905618318 dB
+
+*/
+
+#define FILTER_TAP_NUM 13
+
+static double filter_taps[FILTER_TAP_NUM] = {
+  3.4752553302306173,
+  -22.459748968434795,
+  79.42048835475083,
+  -190.92427205409462,
+  343.5324048171772,
+  -481.71868731369,
+  538.3284268837077,
+  -481.71868731369,
+  343.5324048171772,
+  -190.92427205409462,
+  79.42048835475083,
+  -22.459748968434795,
+  3.4752553302306173
+};
+
+
