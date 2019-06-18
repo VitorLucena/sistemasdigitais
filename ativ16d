@@ -1,0 +1,56 @@
+#define F_CPU 16000000UL
+#include <avr/io.h>
+#include <util/delay.h>
+#include <math.h>
+#include <stdlib.h>
+#define amostras 25
+
+void saida(int c){
+	
+	int x1 = c*4;
+	int x2 = c/64;
+	PORTD = x1;
+	PORTB = x2;
+	return;
+}
+int conversorad(int porta){
+	ADMUX =(1<<REFS0); // Aref = AVcc ;
+	ADCSRA =0x07; // Div factor =128 , (MSB)=9
+	ADCSRB =0x00; // Free running Mode
+	ADCSRA|=(1<<ADEN); // Habilitar A/D
+	ADMUX |= porta; //nunca se esqueca de colocar o | (ou)
+	ADCSRA|=(1<<ADSC); // Iniciar convers~ao simples
+	while (!(ADCSRA & (1<<ADIF)) ) // Aguarde o final da conversao
+	ADCSRA|=(1<<ADIF); // Limpe o identificador
+	return ADC;
+
+}
+
+int main ( void ){
+	int vetor[amostras];
+	int a=0;
+	int b;
+	double soma=0;
+	float coeficiente= (1.0/amostras);
+
+	DDRB=0b11111110;
+	DDRC= 0b11111100;
+	DDRD=0b11111100;
+
+	while (1){
+		soma=0;
+		a=a+1;
+		if(a==(amostras-1)) {a=0;}
+		vetor[a]=conversorad(0)/4;
+		for (int i=0; i<amostras;i++)
+		{
+			soma=soma+vetor[i];
+		}
+		soma*=coeficiente;
+	//soma = soma/1.85;
+		b = soma-140;
+	//	if(b>=100){b=b-20;}
+		PORTD = b;
+	//	saida(b);
+	}
+}
