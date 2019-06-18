@@ -1,0 +1,85 @@
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <math.h>
+
+#define set_bit(Y,bit_x) (Y|=(1<<bit_x))
+#define clr_bit(Y,bit_x) (Y&=~(1<<bit_x))
+#define tst_bit(Y,bit_x) (Y&(1<<bit_x))        //testa bit_x de Y
+#define cpl_bit(Y,bit_x) (Y^=(1<<bit_x))    //alterna bit_x
+
+volatile int x = 0 ;
+
+
+
+
+void saida();
+
+int main(){
+
+	//---------Setup I/O
+	DDRD = 0b11111100; //6 bits de saída para rede R2R( PD2 à PD7)
+	DDRB = 0b00111011; //2 bits de saída para rede R2R( PB0 e PB1)
+	DDRC = 0b11111100; // Seletor das ondas (PA0 e PA1)
+
+	//setup adc
+	ADCSRB = 0;
+	ADCSRA = (1<<ADEN) | (1<<ADPS2) | (1<<ADPS1);
+	ADMUX = (1<<REFS0);
+	
+	int in_a ;
+	int in_b ;
+	int mod ;
+	double sum ;
+	while (1)
+	{
+		
+		if(tst_bit(PINB,2)){
+			
+			sum = 0;
+			
+			for(int k=0;k<=199;k++){
+				
+				clr_bit(ADMUX, 0);
+				ADCSRA |= (1<<ADSC);
+				 while (tst_bit(ADCSRA,ADSC));
+				in_a = ADC;
+				
+				set_bit(ADMUX, 0);
+				ADCSRA |= (1<<ADSC);
+				 while (tst_bit(ADCSRA,ADSC));
+				in_b = ADC;
+
+				mod = (in_a - in_b);
+				sum = sum + abs(mod);
+				
+				
+			}
+			
+			sum = sum/803;
+			x = sum;
+			saida();
+			
+			
+			if(sum >= 100){set_bit(PORTB,5);}
+		 	else {clr_bit(PORTB,5);}
+			
+		}
+	}
+}
+
+
+void saida(){
+
+	uint8_t x1 =(int) x;
+	uint8_t x2 =(int) x;
+
+	x1 = x1*4 ; //Deslocando 2 para esquerda
+	x2 = x2/64; //Deslocando 6 para direita
+
+	PORTD = x1;
+	PORTB = x2;
+	
+	return ;
+}
