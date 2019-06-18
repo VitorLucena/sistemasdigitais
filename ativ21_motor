@@ -1,0 +1,66 @@
+// Author : Vitor
+
+#define F_CPU 16000000UL // 1Mhz
+
+#include <avr/io.h>
+#include <stdlib.h>
+#include <math.h>
+#include <avr/interrupt.h>
+
+#define set_bit(Y,bit_x) (Y|=(1<<bit_x))
+#define clr_bit(Y,bit_x) (Y&=~(1<<bit_x))
+#define tst_bit(Y,bit_x) (Y&(1<<bit_x))        //testa bit_x de Y
+
+void saida(int c){
+	
+	int x1 = c*4;
+	int x2 = c/64;
+	PORTD = x1;
+	PORTB = x2;
+	return;
+}
+int adcon(int porta){
+	
+	ADMUX =(1<<REFS0); // Aref = AVcc ;
+	ADCSRA =0x07; // Div factor =128 , (MSB)=9
+	ADCSRB =0x00; // Free running Mode
+	ADCSRA|=(1<<ADEN); // Habilitar A/D
+    ADMUX |= porta; //nunca se esqueca de colocar o | (ou)
+	ADCSRA|=(1<<ADSC); // Iniciar convers~ao simples
+	while (!(ADCSRA & (1<<ADIF)) ) // Aguarde o final da conversao
+	ADCSRA|=(1<<ADIF); // Limpe o identificador
+	return ADC;
+
+}
+
+int main ( void ){
+
+	DDRB=0b11110011;
+	DDRC=0b11111110;
+	DDRD=0b11111111;
+	
+	TCCR1A = 0b10000011;
+	TCCR1B = 0b00000001;
+
+	while (1){
+		
+		int recebe = adcon(0);
+		
+		if(tst_bit(PINB,2)){
+			
+			OCR1A = recebe;
+			
+			if(tst_bit(PINB,3)){
+				set_bit(PORTD,7);
+				clr_bit(PORTD,6);
+			}
+			else{
+				set_bit(PORTD,6);
+				clr_bit(PORTD,7);
+			}
+			
+		}
+		else{OCR1A = 0;}
+	
+	}
+}
