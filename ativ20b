@@ -78,7 +78,7 @@ int main(void){
 		if(pwm == 0){pwm = 0;}
 		else {pwm--;}
 		}
-		OCR1A = pwm*2;
+		OCR1A = pwm*10;
 	}
 }
 
